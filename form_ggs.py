@@ -218,10 +218,7 @@ def form_creation():
         name = st.text_input('Họ và tên của Anh/Chị: ')
         company = st.text_input('Tên doanh nghiệp của Anh/Chị: ')
         roles = ["C-level", "M-level", "E-level"]  # Define your roles
-        # Safely set the default index
-        default_index = None
-        # Use the selectbox with a valid index
-        role = st.selectbox('Chức vụ của Anh/Chị:', options=roles, index=default_index)
+        role = st.selectbox('Chức vụ của Anh/Chị:', options=roles, index=None)
         phoneNo = st.text_input('Số điện thoại của Anh/Chị: ')
         email = st.text_input('Địa chỉ email của Anh/Chị: ')
         sentiment = st.slider("Rate your experience:", 1, 5, 1, format="%d ⭐")
