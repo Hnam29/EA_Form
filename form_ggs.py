@@ -43,7 +43,7 @@ def create_google_sheet():
     # Check if the worksheet already exists
     try:
         worksheet = spreadsheet.worksheet(worksheet_title)  # Try to get the existing worksheet
-        worksheet.delete()  # Delete the existing worksheet if found
+        spreadsheet.del_worksheet(worksheet)  # Delete the existing worksheet if found
         log_event(f"Deleted existing worksheet '{worksheet_title}'.")
     except gspread.exceptions.WorksheetNotFound:
         log_event(f"Worksheet '{worksheet_title}' does not exist. Proceeding to create a new one.")
