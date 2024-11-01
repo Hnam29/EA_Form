@@ -22,7 +22,7 @@ logging.basicConfig(
 # Log helper function
 def log_event(message):
     logging.info(message)
-    st.write(message)
+    st.info(message)
 
 # Load the service account JSON directly from Streamlit secrets
 service_account_info = st.secrets["GCP_SERVICE_ACCOUNT"]
