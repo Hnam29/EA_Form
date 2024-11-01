@@ -37,22 +37,16 @@ client = gspread.authorize(credentials)
 # Create a new worksheet with the current date
 def create_google_sheet():
     today_date = datetime.now().strftime("%Y-%m-%d")
-    worksheet_title = f'Form_{today_date}'
+    worksheet_title = 'Form'
     spreadsheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1YdblYk8ovrtLmbkGBJAtdNoAXqYXKILGLJH9GTvbtpE')
 
     # Check if the worksheet already exists
     try:
         worksheet = spreadsheet.worksheet(worksheet_title)  # Try to get the existing worksheet
-        spreadsheet.del_worksheet(worksheet)  # Delete the existing worksheet if found
-        log_event(f"Deleted existing worksheet '{worksheet_title}'.")
+        log_event(f"Using existing worksheet '{worksheet_title}'.")
     except gspread.exceptions.WorksheetNotFound:
-        log_event(f"Worksheet '{worksheet_title}' does not exist. Proceeding to create a new one.")
-
-    # Create a new worksheet
-    worksheet = spreadsheet.add_worksheet(title=worksheet_title, rows="100", cols="6")  # Create the worksheet
-    # Set header row
-    worksheet.append_row(["Name", "Company", "Role", "PhoneNo", "Email", "Sentiment"])
-    log_event(f"Created new worksheet '{worksheet_title}'.")
+        log_event(f"Worksheet '{worksheet_title}' does not exist. Please ensure it is created manually.")
+        return None  # Return None if the worksheet does not exist
 
     return worksheet
 
