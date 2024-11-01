@@ -35,16 +35,19 @@ credentials = service_account.Credentials.from_service_account_info(
 client = gspread.authorize(credentials)
 
 # Create a new worksheet with the current date
-def create_google_sheet():
+def create_google_sheet(spreadsheet):
     today_date = datetime.now().strftime("%Y-%m-%d")
     worksheet_title = f'Form_{today_date}'
-    # Create the worksheet if it doesn't exist
+    
+    # Check if the worksheet already exists
     try:
-        worksheet = spreadsheet.add_worksheet(title=worksheet_title, rows="100", cols="6")
+        worksheet = spreadsheet.worksheet(worksheet_title)  # Try to get the existing worksheet
+        log_event(f"Worksheet '{worksheet_title}' already exists.")
+    except gspread.exceptions.WorksheetNotFound:
+        worksheet = spreadsheet.add_worksheet(title=worksheet_title, rows="100", cols="6")  # Create the worksheet
         # Set header row
         worksheet.append_row(["Name", "Company", "Role", "PhoneNo", "Email", "Sentiment"])
-    except gspread.exceptions.WorksheetExists:
-        worksheet = spreadsheet.worksheet(worksheet_title)  # Get the existing worksheet
+        log_event(f"Created new worksheet '{worksheet_title}'.")
 
     return worksheet
 
