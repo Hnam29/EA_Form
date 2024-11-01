@@ -19,11 +19,16 @@ logging.basicConfig(
 # Log helper function
 def log_event(message):
     logging.info(message)
-    
-# Google Sheets connection setup
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name('ea-database-form-fbf45c7169a9.json', scope)
-client = gspread.authorize(creds)
+
+# Load the service account JSON from the Streamlit secrets
+service_account_info = json.loads(os.getenv("GCP_SERVICE_ACCOUNT"))
+# Create credentials using the loaded JSON data
+credentials = service_account.Credentials.from_service_account_info(
+    service_account_info,
+    scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+)
+# Authorize the client with gspread
+client = gspread.authorize(credentials)
 
 # Create a new worksheet with the current date
 def create_google_sheet():
