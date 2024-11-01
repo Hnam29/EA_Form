@@ -226,7 +226,6 @@ def form_creation():
         email = st.text_input('Địa chỉ email của Anh/Chị: ')
         sentiment = st.slider("Rate your experience:", 1, 5, 1, format="%d ⭐")
         submit = st.form_submit_button(label='Register')
-
         if submit:
             data['name'] = name
             data['company'] = company
@@ -249,5 +248,7 @@ def form_creation():
                     st.success('Chúc mừng Anh/Chị đã đăng ký thành công.')
                     st.balloons()
                     st.markdown('Anh/Chị vui lòng kiểm tra email để nhận những thông tin cập nhật từ ban tổ chức.')
+        else:
+            st.warning('Anh/Chị vui lòng nhập đầy đủ các trường thông tin. Xin cảm ơn!')
 
 form_creation()
