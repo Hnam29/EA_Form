@@ -266,6 +266,8 @@ def form_creation():
                             st.error(error)
                     else:
                         add_info(data)
+                        # Send confirmation email
+                        send_confirmation_email(data['name'], data['email'])
                         st.success('Chúc mừng Anh/Chị đã đăng ký thành công.')
                         st.balloons()
                         st.markdown('Anh/Chị vui lòng kiểm tra email để nhận những thông tin cập nhật từ ban tổ chức.')
