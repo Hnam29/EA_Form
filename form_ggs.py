@@ -55,9 +55,7 @@ def create_google_sheet():
             log_event(f"Worksheet '{worksheet_title}' created successfully.")
             print(f"Created new worksheet '{worksheet_title}'.")
 
-        # You can call the email sending function here if you need to send an email
-        send_email()  # Make sure to define this function or integrate your email sending logic
-        print("Email sent successfully.")
+        send_confirmation_email()  
 
         return worksheet
 
