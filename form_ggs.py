@@ -22,7 +22,7 @@ def log_event(message):
     
 # Google Sheets connection setup
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name('/Users/vuhainam/Documents/PROJECT_DA/EdtechAgency/Database/.streamlit/ea-database-form-fbf45c7169a9.json', scope)
+creds = ServiceAccountCredentials.from_json_keyfile_name('ea-database-form-fbf45c7169a9.json', scope)
 client = gspread.authorize(creds)
 
 # Create a new worksheet with the current date
@@ -212,7 +212,7 @@ def form_creation():
     data = {}
     col1, col2 = st.columns([8, 2])
     col1.header('Mời Anh/Chị điền vào thông tin dưới đây để đăng ký tham gia sự kiện')
-    col2.image("/Users/vuhainam/Documents/PROJECT_DA/EdtechAgency/Database/logo.png", caption="")
+    col2.image("logo.png", caption="")
     
     with st.form(key='Registration Form'):
         name = st.text_input('Họ và tên của Anh/Chị: ')
