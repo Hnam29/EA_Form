@@ -36,18 +36,25 @@ client = gspread.authorize(credentials)
 # Create a new worksheet with the current date
 def create_google_sheet():
     today_date = datetime.now().strftime("%Y-%m-%d")
-    spreadsheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1YdblYk8ovrtLmbkGBJAtdNoAXqYXKILGLJH9GTvbtpE')
-    worksheet_title = f'Form_{today_date}'
-
-    # Create the worksheet if it doesn't exist
     try:
-        worksheet = spreadsheet.add_worksheet(title=worksheet_title, rows="100", cols="6")
-        # Set header row
-        worksheet.append_row(["Name", "Company", "Role", "PhoneNo", "Email", "Sentiment"])
-    except gspread.exceptions.WorksheetExists:
-        worksheet = spreadsheet.worksheet(worksheet_title)  # Get the existing worksheet
+        spreadsheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1YdblYk8ovrtLmbkGBJAtdNoAXqYXKILGLJH9GTvbtpE')
+        worksheet_title = f'Form_{today_date}'
+        
+        # Try to add or open the worksheet
+        try:
+            worksheet = spreadsheet.add_worksheet(title=worksheet_title, rows="100", cols="6")
+            worksheet.append_row(["Name", "Company", "Role", "PhoneNo", "Email", "Sentiment"])
+        except gspread.exceptions.APIError:
+            worksheet = spreadsheet.worksheet(worksheet_title)  # Get the existing worksheet if it already exists
 
-    return worksheet
+        return worksheet
+
+    except gspread.exceptions.SpreadsheetNotFound:
+        st.error("Spreadsheet not found. Please check the URL or permissions.")
+    except gspread.exceptions.APIError as e:
+        st.error(f"API error: {e}")
+    except Exception as e:
+        st.error(f"An unexpected error occurred: {e}")
 
 # Insert user info into the Google Sheets
 def add_info(data):
