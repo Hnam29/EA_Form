@@ -38,39 +38,15 @@ client = gspread.authorize(credentials)
 def create_google_sheet():
     today_date = datetime.now().strftime("%Y-%m-%d")
     worksheet_title = f'Form_{today_date}'
-    
+    # Create the worksheet if it doesn't exist
     try:
-        spreadsheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1YdblYk8ovrtLmbkGBJAtdNoAXqYXKILGLJH9GTvbtpE')
-        print("Spreadsheet accessed successfully.")
+        worksheet = spreadsheet.add_worksheet(title=worksheet_title, rows="100", cols="6")
+        # Set header row
+        worksheet.append_row(["Name", "Company", "Role", "PhoneNo", "Email", "Sentiment"])
+    except gspread.exceptions.WorksheetExists:
+        worksheet = spreadsheet.worksheet(worksheet_title)  # Get the existing worksheet
 
-        # Check if the worksheet already exists
-        try:
-            worksheet = spreadsheet.worksheet(worksheet_title)  # Try to get the existing worksheet
-            log_event(f"Existing worksheet '{worksheet_title}' accessed.")
-            print(f"Accessed existing worksheet '{worksheet_title}'.")
-        except gspread.exceptions.WorksheetNotFound:
-            # Create a new worksheet if it does not exist
-            worksheet = spreadsheet.add_worksheet(title=worksheet_title, rows="100", cols="6")
-            worksheet.append_row(["Name", "Company", "Role", "PhoneNo", "Email", "Sentiment"])
-            log_event(f"Worksheet '{worksheet_title}' created successfully.")
-            print(f"Created new worksheet '{worksheet_title}'.")
-
-        send_confirmation_email()  
-
-        return worksheet
-
-    except gspread.exceptions.SpreadsheetNotFound:
-        log_event("Spreadsheet not found. Please check the URL or permissions.")
-        st.error("Spreadsheet not found. Please check the URL or permissions.")
-        print("Spreadsheet not found. Please check the URL or permissions.")
-    except gspread.exceptions.APIError as e:
-        log_event(f"API error: {e}")
-        st.error(f"API error: {e}")
-        print(f"API error: {e}")
-    except Exception as e:
-        log_event(f"An unexpected error occurred: {e}")
-        st.error(f"An unexpected error occurred: {e}")
-        print(f"An unexpected error occurred: {e}")
+    return worksheet
 
 # Insert user info into the Google Sheets
 def add_info(data):
