@@ -1,6 +1,8 @@
 import streamlit as st
+import os
+from google.oauth2 import service_account
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+# from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 import re
 import smtplib
