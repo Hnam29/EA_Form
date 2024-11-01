@@ -2,12 +2,14 @@ import streamlit as st
 import os
 from google.oauth2 import service_account
 import gspread
+# from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 import re
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import logging
+import json
 
 # Set up logging with a timestamp for each log entry
 logging.basicConfig(
@@ -51,10 +53,13 @@ def create_google_sheet(spreadsheet):
 
 # Insert user info into the Google Sheets
 def add_info(data):
-    # Get the spreadsheet
-    spreadsheet = client.open("Your Spreadsheet Name")  # Replace with your spreadsheet name
-    worksheet = create_google_sheet(spreadsheet)
+    worksheet = create_google_sheet()
     
+    # Check if the worksheet was created successfully
+    if worksheet is None:
+        st.error("Failed to initialize worksheet. Please check the sheet setup.")
+        return
+
     # Verify the data structure
     try:
         worksheet.append_row([
@@ -73,27 +78,28 @@ def add_info(data):
 def clean_phone_numbers(phone):
     if not isinstance(phone, str):
         return phone
+    if re.match(r'(\d{4} \d{3} \d{3}|\d{4} \d{3} \d{4})( - (\d{4} \d{3} \d{3}|\d{4} \d{3} \d{4}))*', phone):
+        return phone
     phone = phone.replace('|', '-')
     phone = re.sub(r'[.\s()]', '', phone)
-
-    # Normalize phone prefixes
     if phone.startswith('+84'):
         phone = '0' + phone[3:]
     elif phone.startswith('84'):
         phone = '0' + phone[2:]
-
     if '/' in phone:
         parts = phone.split('/')
         cleaned_parts = [clean_phone_numbers(part.strip().replace('-', '')) for part in parts]
         return ' - '.join(cleaned_parts)
-
     phone = phone.replace('-', '')
     match = re.match(r'(\d+)', phone)
     if match:
         digits = match.group(1)
         if not digits.startswith('0'):
             digits = '0' + digits
-        return f"{digits[:4]} {digits[4:7]} {digits[7:]}" if len(digits) == 10 else phone
+        if len(digits) == 10:
+            return f"{digits[:4]} {digits[4:7]} {digits[7:]}"
+        elif len(digits) == 11:
+            return f"{digits[:4]} {digits[4:7]} {digits[7:]}"
     return phone
 
 # Email typo correction dictionary and pattern
@@ -111,9 +117,9 @@ corrections = {
 email_pattern = re.compile(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+')
 
 def fix_common_typos(email):
-    if not email:
+    if email is None:
         return None
-    email = email.strip().replace(' ', '')
+    email = email.strip().strip('-').replace(' ', '')  # Strip and remove spaces
 
     # Replace general patterns first
     for wrong, right in corrections.items():
@@ -124,26 +130,33 @@ def fix_common_typos(email):
     if match:
         email = match.group(0)
 
-    # Handle multiple '@' cases
+    # Handling multiple '@' cases
     if email.count('@') > 1:
         parts = email.split('@')
         email = parts[0] + '@' + ''.join(parts[1:])
         
     # Lowercase the email
-    email = email.lower()
-    
+    if email.isupper():
+        email = email.lower()
+        
     # Remove trailing dot if exists
     if email.endswith('.'):
         email = email[:-1]
         
-    # Handle Gmail specific cases
+    # Explicitly handle ending with 'gmail'
     if email.endswith('gmail'):
         email = email.replace('gmail', 'gmail.com')
-        
+
+    # Additional check for a final '.com' adjustment
+    if email.endswith('.com'):
+        return email
+    elif email.endswith('.comm'):
+        return email[:-1]  # Remove the extra 'm'
+
     return email
 
 def validate_email(email):
-    if not email or not isinstance(email, str):
+    if email is None or not isinstance(email, str):
         return None, False
     email = fix_common_typos(email)
     if re.match(email_pattern, email):
@@ -161,7 +174,8 @@ def clean_emails(email_cell):
                 is_valid = False
             cleaned_emails.append(cleaned_email)
         return ' - '.join(cleaned_emails), is_valid
-    return None, False
+    else:
+        return None, False
 
 # Main validation function
 def validate_data(data):
@@ -175,7 +189,8 @@ def validate_data(data):
     # Phone number validation
     if "phoneNo" in data:
         cleaned_phone = clean_phone_numbers(data["phoneNo"])
-        data["phoneNo"] = cleaned_phone
+        if cleaned_phone != data["phoneNo"]:
+            data["phoneNo"] = cleaned_phone
         if len(re.sub(r'\D', '', cleaned_phone)) not in [10, 11]:
             errors.append("Số điện thoại chưa hợp lệ.")
     # Email validation
@@ -189,7 +204,7 @@ def validate_data(data):
 
 def send_confirmation_email(user_name, user_email):
     sender_email = "nam.vu@edtechagency.net"
-    sender_password = "HnAm2002#@!"  # Consider using environment variables for sensitive data
+    sender_password = "HnAm2002#@!" 
     subject = "[This is an auto email, no-reply] Confirmation of your submission"
     body = f"Hi {user_name}. EA wants to say a huge dupe cute thank you for your submission! We appreciate your interest. More information will be provided shortly."
 
@@ -198,46 +213,63 @@ def send_confirmation_email(user_name, user_email):
     msg['From'] = sender_email
     msg['To'] = user_email
     msg['Subject'] = subject
+
+    # Attach body text
     msg.attach(MIMEText(body, 'plain'))
 
     try:
-        with smtplib.SMTP('smtp.gmail.com', 587) as server:
-            server.starttls()
-            server.login(sender_email, sender_password)
-            server.send_message(msg)
-            log_event(f"Email sent successfully to {user_name} at {user_email}!")
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.send_message(msg)
+        log_event(f"Email sent successfully to {user_name} at {user_email}!")
 
     except Exception as e:
         log_event(f"Failed to send email to {user_name}: {e}")
+
+    finally:
+        server.quit()
 
 # Form Creation
 def form_creation():
     data = {}
     col1, col2 = st.columns([8, 2])
-    col1.header('Mời Anh Chị Điền Thông Tin Dưới Đây Để Tham Gia Chương Trình Hỗ Trợ Kỹ Năng Chuyên Môn')
-
-    # Input fields
-    data["name"] = col1.text_input("Họ và Tên:")
-    data["company"] = col1.text_input("Tên Công Ty:")
-    data["role"] = col1.text_input("Chức Vụ:")
-    data["phoneNo"] = col1.text_input("Số Điện Thoại:")
-    data["email"] = col1.text_input("Địa Chỉ Email:")
+    col1.header('Mời Anh/Chị điền vào thông tin dưới đây để đăng ký tham gia sự kiện')
+    col2.image("logo.png", caption="")
     
-    # Sentiment options
-    sentiments = ["Tích cực", "Tiêu cực", "Trung tính"]
-    data["sentiment"] = col1.selectbox("Cảm Nhận Của Anh Chị:", sentiments)
-
-    # Submit button
-    if col2.button("Gửi"):
-        errors = validate_data(data)
-        if errors:
-            for error in errors:
-                st.error(error)
-            log_event("Validation failed: " + ", ".join(errors))
+    with st.form(key='Registration Form'):
+        name = st.text_input('Họ và tên của Anh/Chị: ')
+        company = st.text_input('Tên doanh nghiệp của Anh/Chị: ')
+        roles = ["C-level", "M-level", "E-level"]  # Define your roles
+        role = st.selectbox('Chức vụ của Anh/Chị:', options=roles, index=0)
+        phoneNo = st.text_input('Số điện thoại của Anh/Chị: ')
+        email = st.text_input('Địa chỉ email của Anh/Chị: ')
+        sentiment = st.slider("Rate your experience:", 1, 5, 1, format="%d ⭐")
+        submit = st.form_submit_button(label='Register')
+        if role is not None:
+            if submit:
+                data['name'] = name
+                data['company'] = company
+                data['role'] = role
+                data['phoneNo'] = phoneNo
+                data['email'] = email
+                data['sentiment'] = sentiment
+    
+                # Validate input data
+                if not (name and company and role and phoneNo and email and sentiment):
+                    st.warning('Anh/Chị vui lòng nhập đầy đủ các trường thông tin. Xin cảm ơn!')
+                else:
+                    # Validate the input data
+                    errors = validate_data(data)  
+                    if errors:
+                        for error in errors:
+                            st.error(error)
+                    else:
+                        add_info(data)
+                        st.success('Chúc mừng Anh/Chị đã đăng ký thành công.')
+                        st.balloons()
+                        st.markdown('Anh/Chị vui lòng kiểm tra email để nhận những thông tin cập nhật từ ban tổ chức.')
         else:
-            add_info(data)
-            send_confirmation_email(data["name"], data["email"])
-            log_event("User data processed successfully.")
+            st.warning('Anh/Chị vui lòng nhập đầy đủ các trường thông tin. Xin cảm ơn!')
 
-if __name__ == "__main__":
-    form_creation()
+form_creation()
