@@ -43,11 +43,13 @@ def create_google_sheet():
     # Check if the worksheet already exists
     try:
         worksheet = spreadsheet.worksheet(worksheet_title)  # Try to get the existing worksheet
+        # log_event(f"Using existing worksheet '{worksheet_title}'.")
     except gspread.exceptions.WorksheetNotFound:
         # If the worksheet does not exist, create a new one
         worksheet = spreadsheet.add_worksheet(title=worksheet_title, rows="100", cols="6")  # Create the worksheet
         # Set header row
         worksheet.append_row(["Name", "Company", "Role", "PhoneNo", "Email", "Sentiment"])
+        # log_event(f"Created new worksheet '{worksheet_title}'.")
 
     return worksheet
 
@@ -222,10 +224,11 @@ def send_confirmation_email(user_name, user_email):
         server.starttls()
         server.login(sender_email, sender_password)
         server.send_message(msg)
-        log_event(f"Email sent successfully to {user_name} at {user_email}!")
+        # log_event(f"Email sent successfully to {user_name} at {user_email}!")
 
     except Exception as e:
-        log_event(f"Failed to send email to {user_name}: {e}")
+        # log_event(f"Failed to send email to {user_name}: {e}")
+        pass
 
     finally:
         server.quit()
