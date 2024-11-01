@@ -219,7 +219,7 @@ def form_creation():
         company = st.text_input('Tên doanh nghiệp của Anh/Chị: ')
         roles = ["C-level", "M-level", "E-level"]  # Define your roles
         # Safely set the default index
-        default_index = 0 if roles else None  # Default to 0 if roles are available
+        default_index = None
         # Use the selectbox with a valid index
         role = st.selectbox('Chức vụ của Anh/Chị:', options=roles, index=default_index)
         phoneNo = st.text_input('Số điện thoại của Anh/Chị: ')
