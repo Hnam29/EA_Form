@@ -43,12 +43,16 @@ def create_google_sheet():
     # Check if the worksheet already exists
     try:
         worksheet = spreadsheet.worksheet(worksheet_title)  # Try to get the existing worksheet
-        log_event(f"Worksheet '{worksheet_title}' already exists.")
+        worksheet.delete()  # Delete the existing worksheet if found
+        log_event(f"Deleted existing worksheet '{worksheet_title}'.")
     except gspread.exceptions.WorksheetNotFound:
-        worksheet = spreadsheet.add_worksheet(title=worksheet_title, rows="100", cols="6")  # Create the worksheet
-        # Set header row
-        worksheet.append_row(["Name", "Company", "Role", "PhoneNo", "Email", "Sentiment"])
-        log_event(f"Created new worksheet '{worksheet_title}'.")
+        log_event(f"Worksheet '{worksheet_title}' does not exist. Proceeding to create a new one.")
+
+    # Create a new worksheet
+    worksheet = spreadsheet.add_worksheet(title=worksheet_title, rows="100", cols="6")  # Create the worksheet
+    # Set header row
+    worksheet.append_row(["Name", "Company", "Role", "PhoneNo", "Email", "Sentiment"])
+    log_event(f"Created new worksheet '{worksheet_title}'.")
 
     return worksheet
 
