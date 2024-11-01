@@ -217,7 +217,8 @@ def form_creation():
     with st.form(key='Registration Form'):
         name = st.text_input('Họ và tên của Anh/Chị: ')
         company = st.text_input('Tên doanh nghiệp của Anh/Chị: ')
-        role = st.selectbox('Chức vụ của Anh/Chị: ', options=["C-level", "M-level", "E-level"], index=None)
+        roles = ["C-level", "M-level", "E-level"]  # Define your roles
+        role = st.selectbox('Chức vụ của Anh/Chị: ', options=roles, index=0)
         phoneNo = st.text_input('Số điện thoại của Anh/Chị: ')
         email = st.text_input('Địa chỉ email của Anh/Chị: ')
         sentiment = st.slider("Rate your experience:", 1, 5, 1, format="%d ⭐")
