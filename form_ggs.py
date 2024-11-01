@@ -59,8 +59,25 @@ def create_google_sheet():
 # Insert user info into the Google Sheets
 def add_info(data):
     worksheet = create_google_sheet()
-    # Append user data
-    worksheet.append_row([data['name'], data['company'], data['role'], data['phoneNo'], data['email'], data['sentiment']])
+    
+    # Check if the worksheet was created successfully
+    if worksheet is None:
+        st.error("Failed to initialize worksheet. Please check the sheet setup.")
+        return
+
+    # Verify the data structure
+    try:
+        worksheet.append_row([
+            data.get('name', ''), 
+            data.get('company', ''), 
+            data.get('role', ''), 
+            data.get('phoneNo', ''), 
+            data.get('email', ''), 
+            data.get('sentiment', '')
+        ])
+        st.success("Data added successfully.")
+    except Exception as e:
+        st.error(f"An error occurred while appending the row: {e}")
 
 # Phone number cleaning function
 def clean_phone_numbers(phone):
