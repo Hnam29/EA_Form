@@ -72,7 +72,7 @@ def add_info(data):
             data.get('email', ''), 
             data.get('sentiment', '')
         ])
-        st.success("Data added successfully.")
+        # st.success("Data added successfully.")
     except Exception as e:
         st.error(f"An error occurred while appending the row: {e}")
 
