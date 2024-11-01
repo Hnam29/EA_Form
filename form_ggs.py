@@ -23,8 +23,8 @@ logging.basicConfig(
 def log_event(message):
     logging.info(message)
 
-# Load the service account JSON from the Streamlit secrets
-service_account_info = json.loads(os.getenv("GCP_SERVICE_ACCOUNT"))
+# Load the service account JSON directly from Streamlit secrets
+service_account_info = st.secrets["GCP_SERVICE_ACCOUNT"]
 # Create credentials using the loaded JSON data
 credentials = service_account.Credentials.from_service_account_info(
     service_account_info,
