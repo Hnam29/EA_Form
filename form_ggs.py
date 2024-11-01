@@ -35,10 +35,11 @@ credentials = service_account.Credentials.from_service_account_info(
 client = gspread.authorize(credentials)
 
 # Create a new worksheet with the current date
-def create_google_sheet(spreadsheet):
+def create_google_sheet():
     today_date = datetime.now().strftime("%Y-%m-%d")
     worksheet_title = f'Form_{today_date}'
-    
+    spreadsheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1YdblYk8ovrtLmbkGBJAtdNoAXqYXKILGLJH9GTvbtpE')
+
     # Check if the worksheet already exists
     try:
         worksheet = spreadsheet.worksheet(worksheet_title)  # Try to get the existing worksheet
