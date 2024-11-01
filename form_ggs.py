@@ -22,6 +22,7 @@ logging.basicConfig(
 # Log helper function
 def log_event(message):
     logging.info(message)
+    st.write(message)
 
 # Load the service account JSON directly from Streamlit secrets
 service_account_info = st.secrets["GCP_SERVICE_ACCOUNT"]
@@ -40,20 +41,25 @@ def create_google_sheet():
         spreadsheet = client.open_by_url('https://docs.google.com/spreadsheets/d/1YdblYk8ovrtLmbkGBJAtdNoAXqYXKILGLJH9GTvbtpE')
         worksheet_title = f'Form_{today_date}'
         
-        # Try to add or open the worksheet
         try:
             worksheet = spreadsheet.add_worksheet(title=worksheet_title, rows="100", cols="6")
             worksheet.append_row(["Name", "Company", "Role", "PhoneNo", "Email", "Sentiment"])
-        except gspread.exceptions.APIError:
+            log_event(f"Worksheet '{worksheet_title}' created successfully.")
+        except gspread.exceptions.APIError as e:
+            log_event(f"APIError when creating worksheet: {e}")
             worksheet = spreadsheet.worksheet(worksheet_title)  # Get the existing worksheet if it already exists
+            log_event(f"Existing worksheet '{worksheet_title}' accessed.")
 
         return worksheet
 
     except gspread.exceptions.SpreadsheetNotFound:
+        log_event("Spreadsheet not found. Please check the URL or permissions.")
         st.error("Spreadsheet not found. Please check the URL or permissions.")
     except gspread.exceptions.APIError as e:
+        log_event(f"API error: {e}")
         st.error(f"API error: {e}")
     except Exception as e:
+        log_event(f"An unexpected error occurred: {e}")
         st.error(f"An unexpected error occurred: {e}")
 
 # Insert user info into the Google Sheets
@@ -208,7 +214,6 @@ def validate_data(data):
 
 
 def send_confirmation_email(user_name, user_email):
-    # Email configuration
     sender_email = "nam.vu@edtechagency.net"
     sender_password = "HnAm2002#@!" 
     subject = "[This is an auto email, no-reply] Confirmation of your submission"
@@ -224,14 +229,11 @@ def send_confirmation_email(user_name, user_email):
     msg.attach(MIMEText(body, 'plain'))
 
     try:
-        # Set up the server
         server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()  # Upgrade to a secure connection
+        server.starttls()
         server.login(sender_email, sender_password)
-
-        # Send the email
         server.send_message(msg)
-        log_event(f"Email sent successfully to {user_name}!")
+        log_event(f"Email sent successfully to {user_name} at {user_email}!")
 
     except Exception as e:
         log_event(f"Failed to send email to {user_name}: {e}")
