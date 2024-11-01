@@ -226,28 +226,29 @@ def form_creation():
         email = st.text_input('Địa chỉ email của Anh/Chị: ')
         sentiment = st.slider("Rate your experience:", 1, 5, 1, format="%d ⭐")
         submit = st.form_submit_button(label='Register')
-        if submit:
-            data['name'] = name
-            data['company'] = company
-            data['role'] = role
-            data['phoneNo'] = phoneNo
-            data['email'] = email
-            data['sentiment'] = sentiment
-
-            # Validate input data
-            if not (name and company and role and phoneNo and email and sentiment):
-                st.warning('Anh/Chị vui lòng nhập đầy đủ các trường thông tin. Xin cảm ơn!')
-            else:
-                # Validate the input data
-                errors = validate_data(data)  
-                if errors:
-                    for error in errors:
-                        st.error(error)
+        if role is not None:
+            if submit:
+                data['name'] = name
+                data['company'] = company
+                data['role'] = role
+                data['phoneNo'] = phoneNo
+                data['email'] = email
+                data['sentiment'] = sentiment
+    
+                # Validate input data
+                if not (name and company and role and phoneNo and email and sentiment):
+                    st.warning('Anh/Chị vui lòng nhập đầy đủ các trường thông tin. Xin cảm ơn!')
                 else:
-                    add_info(data)
-                    st.success('Chúc mừng Anh/Chị đã đăng ký thành công.')
-                    st.balloons()
-                    st.markdown('Anh/Chị vui lòng kiểm tra email để nhận những thông tin cập nhật từ ban tổ chức.')
+                    # Validate the input data
+                    errors = validate_data(data)  
+                    if errors:
+                        for error in errors:
+                            st.error(error)
+                    else:
+                        add_info(data)
+                        st.success('Chúc mừng Anh/Chị đã đăng ký thành công.')
+                        st.balloons()
+                        st.markdown('Anh/Chị vui lòng kiểm tra email để nhận những thông tin cập nhật từ ban tổ chức.')
         else:
             st.warning('Anh/Chị vui lòng nhập đầy đủ các trường thông tin. Xin cảm ơn!')
 
